@@ -47,11 +47,11 @@ namespace PromoCodeFactory.DataAccess.Repositories
         {
             await IsExits(entity.Id);
 
-            var index = _data.IndexOf(_data.FirstOrDefault( t => t.Id == entity.Id));
-            if (index != -1)
+            await Task.Run(() =>
             {
+                var index = _data.IndexOf(_data.FirstOrDefault(t => t.Id == entity.Id));
                 _data[index] = entity;
-            }
+            });
         }
 
         public async Task IsExits(Guid id)
