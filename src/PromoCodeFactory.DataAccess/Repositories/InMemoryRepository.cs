@@ -4,25 +4,66 @@ using System.Linq;
 using System.Threading.Tasks;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.Core.Domain;
+using PromoCodeFactory.Core.Domain.Administration;
 namespace PromoCodeFactory.DataAccess.Repositories
 {
     public class InMemoryRepository<T>: IRepository<T> where T: BaseEntity
     {
-        protected IEnumerable<T> Data { get; set; }
+        protected IList<T> _data { get; set; }
 
-        public InMemoryRepository(IEnumerable<T> data)
+        public InMemoryRepository(IList<T> data)
         {
-            Data = data;
+            _data = data;
         }
 
         public Task<IEnumerable<T>> GetAllAsync()
         {
-            return Task.FromResult(Data);
+            return Task.FromResult(_data.AsEnumerable());
         }
 
-        public Task<T> GetByIdAsync(Guid id)
+        public async Task<T> GetByIdAsync(Guid id)
         {
-            return Task.FromResult(Data.FirstOrDefault(x => x.Id == id));
+            await IsExits(id);
+
+            return await Task.Run(() => _data.FirstOrDefault(x => x.Id == id));
+        }
+
+        public async Task Add(T entity)
+        {
+            await Task.Run(() => { _data.Add(entity); });
+        }
+
+        public async Task Delete(Guid id)
+        {
+            await IsExits(id);
+            await Task.Run(() =>
+            {
+                var item = _data.FirstOrDefault(t => t.Id == id);
+                _data.Remove(item);
+            });
+        }
+
+        public async Task Update(T entity)
+        {
+            await IsExits(entity.Id);
+
+            var index = _data.IndexOf(_data.FirstOrDefault( t => t.Id == entity.Id));
+            if (index != -1)
+            {
+                _data[index] = entity;
+            }
+        }
+
+        public async Task IsExits(Guid id)
+        {
+            await Task.Run(() =>
+            {
+                var item = _data.FirstOrDefault(t => t.Id == id);
+                if (item == null)
+                {
+                    throw new KeyNotFoundException("Запись не найдена");
+                }
+            });
         }
     }
 }
