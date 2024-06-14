@@ -36,6 +36,7 @@ namespace PromoCodeFactory.DataAccess.Repositories
         public async Task Delete(Guid id)
         {
             await IsExits(id);
+
             await Task.Run(() =>
             {
                 var item = _data.FirstOrDefault(t => t.Id == id);
